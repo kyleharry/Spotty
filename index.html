@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify Set Builder</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div id="app">
+        <header>
+            <h1>Spotify Set Builder</h1>
+            <div id="user-profile" class="hidden">
+                <span id="user-name"></span>
+                <button id="logout-btn"
+                    style="font-size: 0.8rem; padding: 6px 16px; margin-left: 10px; background-color: #333; color: white;">Logout</button>
+            </div>
+        </header>
+
+        <main>
+            <section id="login-section">
+                <p>Build playlists by dragging and dropping tracks, then extend them with recommendations (if
+                    available).</p>
+                <div style="margin-top: 2rem; text-align: center;">
+                    <button id="login-btn">Connect to Spotify</button>
+                </div>
+            </section>
+
+            <section id="builder-section" class="hidden">
+                <div id="drop-zone">
+                    <h2>Drop Spotify Tracks Here</h2>
+                    <p style="color: var(--text-secondary);">Drag songs or albums from Spotify (Desktop or Web) and drop
+                        them here.</p>
+                </div>
+
+                <div id="track-list-container">
+                    <h3>Your Set (<span id="track-count">0</span>)</h3>
+                    <ul id="track-list" class="track-list">
+                        <!-- Tracks will appear here -->
+                    </ul>
+                </div>
+
+                <div class="controls">
+                    <div class="control-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="use-recommendations">
+                            <span>Use recommendations to expand playlist</span>
+                        </label>
+                    </div>
+
+                    <div class="control-group hidden" id="rec-options">
+                        <label for="rec-count">Extra tracks to add:</label>
+                        <input type="number" id="rec-count" value="20" min="1" max="50">
+                    </div>
+
+                    <div class="control-group">
+                        <label for="playlist-name">Playlist Name</label>
+                        <input type="text" id="playlist-name" value="My Awesome Set"
+                            placeholder="e.g. Friday Night Vibes">
+                    </div>
+
+                    <div style="margin-top: 1rem;">
+                        <button id="create-playlist-btn">Create Playlist</button>
+                    </div>
+                    <div id="status-message"
+                        style="margin-top: 1rem; color: var(--text-secondary); font-style: italic;"></div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="auth.js"></script>
+    <script>
+        // Inline script to wire up basics for now, will move to app.js later if needed
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            // If we are coming back from auth (though typically we use callback.html, 
+            // some setups might use the same page. We'll stick to callback.html plan,
+            // but checking for token existence here is good practice).
+
+            if (localStorage.getItem('access_token')) {
+                // We have a token (presumably), show the app
+                document.getElementById('login-section').classList.add('hidden');
+                document.getElementById('builder-section').classList.remove('hidden');
+                document.getElementById('user-profile').classList.remove('hidden');
+                // We'll invoke a function from auth.js or similar to fetch profile later
+            }
+
+            document.getElementById('login-btn').addEventListener('click', () => {
+                if (typeof startAuth === 'function') {
+                    startAuth();
+                } else {
+                    console.error('startAuth function not found in auth.js');
+                }
+            });
+
+            document.getElementById('logout-btn').addEventListener('click', () => {
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('refresh_token');
+                localStorage.removeItem('token_expiration');
+                window.location.reload();
+            });
+
+            // Toggle recommendations options
+            document.getElementById('use-recommendations').addEventListener('change', (e) => {
+                const recOptions = document.getElementById('rec-options');
+                if (e.target.checked) {
+                    recOptions.classList.remove('hidden');
+                } else {
+                    recOptions.classList.add('hidden');
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>
