@@ -1,10 +1,15 @@
 // auth.js
 
 // CONFIGURATION
-// REPLACE 'YOUR_CLIENT_ID_HERE' with your actual Spotify Client ID
-const CLIENT_ID = 'YOUR_CLIENT_ID_HERE';
-const REDIRECT_URI = window.location.origin + window.location.pathname.replace('index.html', '').replace(/\/$/, '') + '/callback.html';
+// REPLACE 'cde5bf3b126944f09a03f530829b2bdb' with your actual Spotify Client ID
+const CLIENT_ID = 'cde5bf3b126944f09a03f530829b2bdb';
 const SCOPES = 'playlist-modify-private playlist-modify-public user-read-private user-read-email';
+
+// Determine if we are on GitHub Pages (subdirectory) or Localhost (root)
+const isGitHubPages = window.location.pathname.startsWith('/spotify-set-builder');
+const basePath = isGitHubPages ? '/spotify-set-builder' : '';
+const REDIRECT_URI = window.location.origin + basePath + '/callback';
+
 const TOKEN_ENDPOINT = 'https://accounts.spotify.com/api/token';
 const AUTH_ENDPOINT = 'https://accounts.spotify.com/authorize';
 
@@ -56,13 +61,12 @@ async function generateCodeChallenge(v) {
 /**
  * Initiates the PKCE Auth Flow.
  */
+
 async function startAuth() {
-    if (CLIENT_ID === 'YOUR_CLIENT_ID_HERE') {
-        alert('Please update the CLIENT_ID in auth.js with your Spotify App Client ID.');
-        return;
-    }
+    // Client ID check removed as it is now set.
 
     const codeVerifier = generateRandomString(128);
+
     const codeChallenge = await generateCodeChallenge(codeVerifier);
 
     // Store verifier for the callback
@@ -77,6 +81,8 @@ async function startAuth() {
         code_challenge: codeChallenge
     });
 
+
+    console.log('Redirecting to Spotify with URI:', REDIRECT_URI);
     window.location.href = `${AUTH_ENDPOINT}?${params.toString()}`;
 }
 
@@ -141,10 +147,42 @@ async function handleRedirectCallback() {
         localStorage.setItem('token_expiration', expiresAt);
 
         // Redirect to main app
-        window.location.href = 'index.html';
+        const appUrl = window.location.origin + (isGitHubPages ? '/spotify-set-builder/' : '/');
+        window.location.href = appUrl;
 
     } catch (err) {
         console.error('Error getting token:', err);
         document.getElementById('message').innerText = 'Error getting token: ' + err.message;
+    }
+}
+
+/**
+ * Fetches the current user's profile.
+ */
+async function fetchProfile() {
+    const accessToken = localStorage.getItem('access_token');
+    if (!accessToken) return null;
+
+    try {
+        const response = await fetch('https://api.spotify.com/v1/me', {
+            headers: {
+                Authorization: 'Bearer ' + accessToken
+            }
+        });
+
+        if (!response.ok) {
+            if (response.status === 401) {
+                // Token expired or invalid
+                localStorage.removeItem('access_token');
+                window.location.reload();
+                return null;
+            }
+            throw new Error('Failed to fetch profile');
+        }
+
+        return await response.json();
+    } catch (e) {
+        console.error(e);
+        return null;
     }
 }

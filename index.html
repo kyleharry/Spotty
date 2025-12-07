@@ -72,48 +72,7 @@
     </div>
 
     <script src="auth.js"></script>
-    <script>
-        // Inline script to wire up basics for now, will move to app.js later if needed
-        document.addEventListener('DOMContentLoaded', () => {
-            const params = new URLSearchParams(window.location.search);
-            // If we are coming back from auth (though typically we use callback.html, 
-            // some setups might use the same page. We'll stick to callback.html plan,
-            // but checking for token existence here is good practice).
-
-            if (localStorage.getItem('access_token')) {
-                // We have a token (presumably), show the app
-                document.getElementById('login-section').classList.add('hidden');
-                document.getElementById('builder-section').classList.remove('hidden');
-                document.getElementById('user-profile').classList.remove('hidden');
-                // We'll invoke a function from auth.js or similar to fetch profile later
-            }
-
-            document.getElementById('login-btn').addEventListener('click', () => {
-                if (typeof startAuth === 'function') {
-                    startAuth();
-                } else {
-                    console.error('startAuth function not found in auth.js');
-                }
-            });
-
-            document.getElementById('logout-btn').addEventListener('click', () => {
-                localStorage.removeItem('access_token');
-                localStorage.removeItem('refresh_token');
-                localStorage.removeItem('token_expiration');
-                window.location.reload();
-            });
-
-            // Toggle recommendations options
-            document.getElementById('use-recommendations').addEventListener('change', (e) => {
-                const recOptions = document.getElementById('rec-options');
-                if (e.target.checked) {
-                    recOptions.classList.remove('hidden');
-                } else {
-                    recOptions.classList.add('hidden');
-                }
-            });
-        });
-    </script>
+    <script src="app.js"></script>
 </body>
 
 </html>
